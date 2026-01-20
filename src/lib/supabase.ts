@@ -1,6 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { createClientComponentClient, createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 
 // Get environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -13,21 +11,32 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Client-side Supabase client (for use in Client Components)
 export const createBrowserClient = () => {
-  return createClientComponentClient()
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  })
 }
 
 // Server-side Supabase client (for use in Server Components, API routes)
-export const createServerClient = async () => {
-  const cookieStore = await cookies()
-  return createServerComponentClient({ cookies: () => cookieStore })
+export const createServerClient = () => {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: false,
+      detectSessionInUrl: false
+    }
+  })
 }
 
 // Simple client for use in API routes or server actions
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+    persistSession: false, // Don't persist session in server-side client
+    detectSessionInUrl: false
   }
 })
 
